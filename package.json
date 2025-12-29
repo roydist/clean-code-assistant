@@ -1,0 +1,88 @@
+{
+  "name": "clean-code-assistant",
+  "displayName": "clean-code-assistant",
+  "description": "Code analyzer for clean code",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roydi/clean-code-assistant"
+  },
+  "engines": {
+    "vscode": "^1.107.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:javascript",
+    "onCommand:clean-code-assistant.applySrpSuggestions"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "clean-code-assistant.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "clean-code-assistant.applySrpSuggestions",
+        "title": "Clean Code: Apply SRP suggestions"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Clean Code Assistant",
+      "properties": {
+        "cleanCodeAssistant.srp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Single Responsibility Principle checks."
+        },
+        "cleanCodeAssistant.srp.autoApply": {
+          "type": "string",
+          "enum": ["off", "safe", "always"],
+          "default": "off",
+          "description": "Automatic application of safe SRP refactorings."
+        },
+        "cleanCodeAssistant.srp.severity": {
+          "type": "string",
+          "enum": ["info", "warning"],
+          "default": "warning",
+          "description": "Severity level for SRP diagnostics."
+        },
+        "cleanCodeAssistant.srp.maxSuggestionComplexity": {
+          "type": "number",
+          "default": 10,
+          "description": "Maximum method/property complexity to attempt automatic extraction."
+        },
+        "cleanCodeAssistant.srp.showNotification": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a VS Code notification when SRP violations are detected."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "dependencies": {
+    "ts-morph": "^23.0.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.107.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "typescript-eslint": "^8.48.1",
+    "eslint": "^9.39.1",
+    "typescript": "^5.9.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}
