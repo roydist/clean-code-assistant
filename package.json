@@ -3,10 +3,10 @@
   "displayName": "clean-code-assistant",
   "description": "Code analyzer for clean code",
   "version": "0.0.1",
-  "publisher": "roydi",
+  "publisher": "roydist",
   "repository": {
     "type": "git",
-    "url": "https://github.com/roydi/clean-code-assistant"
+    "url": "https://github.com/roydist/clean-code-assistant"
   },
   "engines": {
     "vscode": "^1.107.0"
