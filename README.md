@@ -41,6 +41,17 @@ A comprehensive VS Code extension that analyzes TypeScript and JavaScript code f
 **Short description**  
 A comprehensive analyzer that detects various Clean Code violations and suggests refactorings to improve code quality, maintainability, and readability.
 
+## LLM-Powered Analysis
+
+The extension supports advanced analysis using X AI's language models for deeper insights into code quality issues. To enable LLM analysis:
+
+1. Get an X AI API key from [x.ai](https://x.ai)
+2. Set the API key in VS Code settings: `cleanCodeAssistant.llm.apiKey`
+3. Enable LLM analysis: `cleanCodeAssistant.llm.enabled`
+4. Configure the model and endpoint if needed
+
+The LLM analysis provides additional violation types including security vulnerabilities, performance concerns, and advanced SOLID principle violations that static analysis might miss.
+
 ### What it does 🔍
 
 * **Analyzes** TypeScript and JavaScript files for multiple Clean Code aspects.

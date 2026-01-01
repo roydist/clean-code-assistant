@@ -3,6 +3,7 @@
   "displayName": "clean-code-assistant",
   "description": "Code analyzer for clean code",
   "version": "0.0.1",
+  "publisher": "roydi",
   "repository": {
     "type": "git",
     "url": "https://github.com/roydi/clean-code-assistant"
@@ -27,8 +28,10 @@
       },
       {
         "command": "clean-code-assistant.applySrpSuggestions",
-        "title": "Clean Code: Apply SRP suggestions"
-      }
+        "title": "Clean Code: Apply SRP suggestions"      },
+      {
+        "command": "clean-code-assistant.goToViolation",
+        "title": "Clean Code: Go to Violation"      }
     ],
     "configuration": {
       "type": "object",
@@ -60,6 +63,31 @@
           "type": "boolean",
           "default": true,
           "description": "Show a VS Code notification when SRP violations are detected."
+        },
+        "cleanCodeAssistant.notifications.enableGoToViolation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a 'Go to Violation' action in the notification to jump to the offending line."
+        },
+        "cleanCodeAssistant.llm.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "X AI API key for LLM-based clean code analysis. Leave empty to disable LLM analysis."
+        },
+        "cleanCodeAssistant.llm.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable LLM-based analysis for deeper clean code insights."
+        },
+        "cleanCodeAssistant.llm.endpoint": {
+          "type": "string",
+          "default": "https://api.x.ai/v1/chat/completions",
+          "description": "X AI API endpoint URL."
+        },
+        "cleanCodeAssistant.llm.model": {
+          "type": "string",
+          "default": "grok-beta",
+          "description": "X AI model to use for analysis."
         }
       }
     }
@@ -73,7 +101,8 @@
     "test": "vscode-test"
   },
   "dependencies": {
-    "ts-morph": "^23.0.0"
+    "ts-morph": "^23.0.0",
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "@types/vscode": "^1.107.0",
