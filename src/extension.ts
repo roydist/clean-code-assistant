@@ -333,8 +333,11 @@ Respond only with the JSON array, no additional text.`;
 			diagnostics.push(errDiag);
 		}
 
+		// Perform LLM-based analysis if enabled
+		const finalDiagnostics = await analyzeWithLLM(document, diagnostics);
+
 		// Populate violation map for this document
-		const vlist: Violation[] = diagnostics.map(d => ({
+		const vlist: Violation[] = finalDiagnostics.map(d => ({
 			id: `${document.uri.toString()}#${d.range.start.line}#${String(d.code)}`,
 			message: d.message,
 			range: d.range,
@@ -344,6 +347,9 @@ Respond only with the JSON array, no additional text.`;
 		if (vlist.length > 0) violationMap.set(document.uri.toString(), vlist);
 		else violationMap.delete(document.uri.toString());
 
+		// Set diagnostics on the document
+		srpDiagnostics.set(document.uri, finalDiagnostics);
+
 		// Notify user once per detected violation (if enabled)
 		const showNotif = config().get<boolean>('cleanCodeAssistant.srp.showNotification', true);
 		const enableGoTo = config().get<boolean>('cleanCodeAssistant.notifications.enableGoToViolation', true);
@@ -351,7 +357,7 @@ Respond only with the JSON array, no additional text.`;
 			const key = document.uri.toString();
 			let set = notifiedViolations.get(key);
 			if (!set) { set = new Set<string>(); notifiedViolations.set(key, set); }
-			for (const d of diagnostics) {
+			for (const d of finalDiagnostics) {
 				const violationKey = `${d.code}-${d.range.start.line}`;
 				if (!set.has(violationKey)) {
 					(async () => {
