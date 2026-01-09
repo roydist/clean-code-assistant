@@ -24,9 +24,12 @@ class ExtensionLogger {
 
 	private initializeLogStream() {
 		try {
+			console.log(`[CleanCodeAssistant] Initializing log stream at: ${this.logFilePath}`);
 			this.logStream = fs.createWriteStream(this.logFilePath, { flags: 'a' });
+			console.log(`[CleanCodeAssistant] Log stream initialized successfully`);
 		} catch (error) {
-			console.error('Failed to initialize log stream:', error);
+			console.error('[CleanCodeAssistant] Failed to initialize log stream:', error);
+			console.error('[CleanCodeAssistant] Log file path:', this.logFilePath);
 		}
 	}
 
@@ -81,6 +84,10 @@ export function activate(context: vscode.ExtensionContext) {
 	const logger = new ExtensionLogger(context);
 	context.subscriptions.push({ dispose: () => logger.dispose() });
 
+	// Test logging
+	console.log('[CleanCodeAssistant] Extension activated, testing logger...');
+	logger.logEvent('extension', 'activate', 'Extension activated successfully');
+
 	// track which violations we've already notified the user about per document
 	const notifiedViolations = new Map<string, Set<string>>();
 
@@ -98,12 +105,30 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// LLM-based analysis for deeper clean code insights
 	async function analyzeWithLLM(document: vscode.TextDocument, existingDiagnostics: vscode.Diagnostic[]): Promise<vscode.Diagnostic[]> {
-		const llmEnabled = config().get<boolean>('cleanCodeAssistant.llm.enabled', false);
-		const apiKey = config().get<string>('cleanCodeAssistant.llm.apiKey', '');
-		const endpoint = config().get<string>('cleanCodeAssistant.llm.endpoint', 'https://api.x.ai/v1/chat/completions');
-		const model = config().get<string>('cleanCodeAssistant.llm.model', 'grok-beta');
+		const configObj = config();
 
-		if (!llmEnabled || !apiKey) {
+		// Get settings with environment variable fallbacks for testing
+		const llmEnabled = configObj.get<boolean>('cleanCodeAssistant.llm.enabled', false) ||
+		                  process.env.CLEAN_CODE_LLM_ENABLED === 'true';
+		const apiKey = configObj.get<string>('cleanCodeAssistant.llm.apiKey', '') ||
+		              process.env.CLEAN_CODE_API_KEY || '';
+		const endpoint = configObj.get<string>('cleanCodeAssistant.llm.endpoint', 'https://api.x.ai/v1/chat/completions');
+		const model = configObj.get<string>('cleanCodeAssistant.llm.model', 'grok-code-fast-1');
+
+		// Skip LLM analysis in test environment or with invalid API keys
+		const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.VSCODE_TEST === 'true' || !vscode.workspace.workspaceFolders;
+		const hasValidApiKey = apiKey && apiKey.length > 10 && !apiKey.includes('***'); // Basic check for redacted/invalid keys
+
+		logger.log('INFO', 'llm', 'check', `LLM analysis check: enabled=${llmEnabled}, hasValidApiKey=${hasValidApiKey}, isTestEnvironment=${isTestEnvironment}, endpoint=${endpoint}, model=${model}`, { uri: document.uri.toString() });
+
+		if (!llmEnabled || !hasValidApiKey || isTestEnvironment) {
+			logger.log('INFO', 'llm', 'skip', 'LLM analysis skipped', {
+				enabled: llmEnabled,
+				hasValidApiKey: hasValidApiKey,
+				isTestEnvironment: isTestEnvironment,
+				envEnabled: process.env.CLEAN_CODE_LLM_ENABLED,
+				envApiKey: !!process.env.CLEAN_CODE_API_KEY
+			});
 			return existingDiagnostics;
 		}
 
@@ -112,7 +137,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const prompt = `Analyze the following TypeScript/JavaScript code for clean code violations and provide specific, actionable feedback. Focus on:
 
 1. Code smells and anti-patterns
-2. SOLID principle violations
+2. SOLID principle violatioDeveloper: Reload Windowns
 3. Readability and maintainability issues
 4. Performance concerns
 5. Security vulnerabilities
@@ -178,8 +203,27 @@ Respond only with the JSON array, no additional text.`;
 			return [...existingDiagnostics, ...llmDiagnostics];
 
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			logger.log('ERROR', 'llm', 'analysis', 'LLM analysis failed', { error: errorMessage, uri: document.uri.toString() });
+			let errorMessage = error instanceof Error ? error.message : String(error);
+			let errorDetails = {};
+
+			// Check if it's an axios error with response data
+			if (error && typeof error === 'object' && 'response' in error) {
+				const axiosError = error as any;
+				if (axiosError.response) {
+					errorMessage = `HTTP ${axiosError.response.status}: ${axiosError.response.statusText}`;
+					errorDetails = {
+						status: axiosError.response.status,
+						statusText: axiosError.response.statusText,
+						data: axiosError.response.data
+					};
+				}
+			}
+
+			logger.log('ERROR', 'llm', 'analysis', 'LLM analysis failed', {
+				error: errorMessage,
+				details: errorDetails,
+				uri: document.uri.toString()
+			});
 			// Return existing diagnostics if LLM fails
 			return existingDiagnostics;
 		}

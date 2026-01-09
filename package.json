@@ -86,7 +86,7 @@
         },
         "cleanCodeAssistant.llm.model": {
           "type": "string",
-          "default": "grok-beta",
+          "default": "grok-code-fast-1",
           "description": "X AI model to use for analysis."
         }
       }
